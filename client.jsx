@@ -77,10 +77,6 @@ export default class Client {
         return `${this.url}${this.urlVersion}/teams/${this.getTeamId()}`;
     }
 
-    getTeamNeededManualRoute(teamId) {
-        return `${this.url}${this.urlVersion}/teams/${teamId}`;
-    }
-
     getChannelsRoute() {
         return `${this.url}${this.urlVersion}/teams/${this.getTeamId()}/channels`;
     }
@@ -113,12 +109,8 @@ export default class Client {
         return `${this.url}${this.urlVersion}/users`;
     }
 
-    getTeamFilesRoute() {
+    getFilesRoute() {
         return `${this.url}${this.urlVersion}/teams/${this.getTeamId()}/files`;
-    }
-
-    getFileRoute(fileId) {
-        return `${this.url}${this.urlVersion}/files/${fileId}`;
     }
 
     getOAuthRoute() {
@@ -127,10 +119,6 @@ export default class Client {
 
     getUserNeededRoute(userId) {
         return `${this.url}${this.urlVersion}/users/${userId}`;
-    }
-
-    getWebrtcRoute() {
-        return `${this.url}${this.urlVersion}/webrtc`;
     }
 
     setTranslations(messages) {
@@ -717,43 +705,28 @@ export default class Client {
         this.track('api', 'api_users_update_notification_settings');
     }
 
-    updateUserRoles(userId, newRoles, success, error) {
+    updateRoles(teamId, userId, newRoles, success, error) {
         var data = {
-            new_roles: newRoles
-        };
-
-        request.
-            post(`${this.getUserNeededRoute(userId)}/update_roles`).
-            set(this.defaultHeaders).
-            type('application/json').
-            accept('application/json').
-            send(data).
-            end(this.handleResponse.bind(this, 'updateUserRoles', success, error));
-
-        this.track('api', 'api_users_update_user_roles');
-    }
-
-    updateTeamMemberRoles(teamId, userId, newRoles, success, error) {
-        var data = {
+            team_id: teamId,
             user_id: userId,
             new_roles: newRoles
         };
 
         request.
-            post(`${this.getTeamNeededManualRoute(teamId)}/update_member_roles`).
+            post(`${this.getUsersRoute()}/update_roles`).
             set(this.defaultHeaders).
             type('application/json').
             accept('application/json').
             send(data).
-            end(this.handleResponse.bind(this, 'updateTeamMemberRoles', success, error));
+            end(this.handleResponse.bind(this, 'updateRoles', success, error));
 
-        this.track('api', 'api_teams_update_member_roles');
+        this.track('api', 'api_users_update_roles');
     }
 
     updateActive(userId, active, success, error) {
         var data = {};
         data.user_id = userId;
-        data.active = String(active);
+        data.active = '' + active;
 
         request.
             post(`${this.getUsersRoute()}/update_active`).
@@ -763,7 +736,7 @@ export default class Client {
             send(data).
             end(this.handleResponse.bind(this, 'updateActive', success, error));
 
-        this.track('api', 'api_users_update_active');
+        this.track('api', 'api_users_update_roles');
     }
 
     sendPasswordReset(email, success, error) {
@@ -881,15 +854,6 @@ export default class Client {
             type('application/json').
             accept('application/json').
             end(this.handleResponse.bind(this, 'getMe', success, error));
-    }
-
-    getUser(userId, success, error) {
-        request.
-            get(`${this.getUserNeededRoute(userId)}/get`).
-            set(this.defaultHeaders).
-            type('application/json').
-            accept('application/json').
-            end(this.handleResponse.bind(this, 'getUser', success, error));
     }
 
     login(loginId, password, mfaToken, success, error) {
@@ -1340,7 +1304,7 @@ export default class Client {
             set(this.defaultHeaders).
             type('application/json').
             accept('application/json').
-            send({channelId, command, suggest: String(suggest)}).
+            send({channelId, command, suggest: '' + suggest}).
             end(this.handleResponse.bind(this, 'executeCommand', success, error));
 
         this.track('api', 'api_integrations_used');
@@ -1524,71 +1488,40 @@ export default class Client {
             end(this.handleResponse.bind(this, 'getFlaggedPosts', success, error));
     }
 
-    getFileInfosForPost(channelId, postId, success, error) {
-        request.
-            get(`${this.getChannelNeededRoute(channelId)}/posts/${postId}/get_file_infos`).
-            set(this.defaultHeaders).
-            type('application/json').
-            accept('application/json').
-            end(this.handleResponse.bind(this, 'getFileInfosForPost', success, error));
-    }
-
     // Routes for Files
 
-    uploadFile(file, filename, channelId, clientId, success, error) {
-        return request.
-            post(`${this.getTeamFilesRoute()}/upload`).
-            set(this.defaultHeaders).
-            attach('files', file, filename).
-            field('channel_id', channelId).
-            field('client_ids', clientId).
-            accept('application/json').
-            end(this.handleResponse.bind(this, 'uploadFile', success, error));
-    }
-
-    getFile(fileId, success, error) {
+    getFileInfo(filename, success, error) {
         request.
-            get(`${this.getFileRoute(fileId)}/get`).
-            set(this.defaultHeaders).
-            type('application/json').
-            accept('application/json').
-            end(this.handleResponse.bind(this, 'getFile', success, error));
-    }
-
-    getFileThumbnail(fileId, success, error) {
-        request.
-            get(`${this.getFileRoute(fileId)}/get_thumbnail`).
-            set(this.defaultHeaders).
-            type('application/json').
-            accept('application/json').
-            end(this.handleResponse.bind(this, 'getFileThumbnail', success, error));
-    }
-
-    getFilePreview(fileId, success, error) {
-        request.
-            get(`${this.getFileRoute(fileId)}/get`).
-            set(this.defaultHeaders).
-            type('application/json').
-            accept('application/json').
-            end(this.handleResponse.bind(this, 'getFilePreview', success, error));
-    }
-
-    getFileInfo(fileId, success, error) {
-        request.
-            get(`${this.getFileRoute(fileId)}/get_info`).
+            get(`${this.getFilesRoute()}/get_info${filename}`).
             set(this.defaultHeaders).
             type('application/json').
             accept('application/json').
             end(this.handleResponse.bind(this, 'getFileInfo', success, error));
     }
 
-    getPublicLink(fileId, success, error) {
+    getPublicLink(filename, success, error) {
+        const data = {
+            filename
+        };
+
         request.
-            get(`${this.getFileRoute(fileId)}/get_public_link`).
+            post(`${this.getFilesRoute()}/get_public_link`).
             set(this.defaultHeaders).
             type('application/json').
             accept('application/json').
+            send(data).
             end(this.handleResponse.bind(this, 'getPublicLink', success, error));
+    }
+
+    uploadFile(file, filename, channelId, clientId, success, error) {
+        return request.
+            post(`${this.getFilesRoute()}/upload`).
+            set(this.defaultHeaders).
+            attach('files', file, filename).
+            field('channel_id', channelId).
+            field('client_ids', clientId).
+            accept('application/json').
+            end(this.handleResponse.bind(this, 'uploadFile', success, error));
     }
 
     // Routes for OAuth
@@ -1860,13 +1793,5 @@ export default class Client {
             }
             return success(res.body);
         });
-    }
-
-    webrtcToken(success, error) {
-        request.post(`${this.getWebrtcRoute()}/token`).
-        set(this.defaultHeaders).
-        type('application/json').
-        accept('application/json').
-        end(this.handleResponse.bind(this, 'webrtcToken', success, error));
     }
 }
