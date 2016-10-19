@@ -1,6 +1,6 @@
 {
   "name": "@gig177/mattermost-driver-javascript",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "Javascript library for interacting with the Mattermost API",
   "main": "lib/client.js",
   "files": [
