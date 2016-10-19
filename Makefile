@@ -18,8 +18,7 @@ build: npminstall
 publish: npminstall
 	@echo Publishing
 
-	npm login
-	npm publish
+	npm publish --access public
 
 
 clean:
